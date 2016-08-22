@@ -1,4 +1,4 @@
-///Interface
+//RGB interface
 interface rgb_if(input logic clk, rst);
     logic [7:0] R, G, B;
     
