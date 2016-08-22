@@ -1,4 +1,4 @@
-//Interface
+//YCbCr interface
 interface ycbcr_if(input clk, rst);
     logic [7:0] Y, Cb, Cr;
     
