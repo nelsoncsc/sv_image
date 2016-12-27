@@ -3,7 +3,7 @@ parameter WORD_SIZE = 8;
 parameter ROW_SIZE = 10;
 parameter BUFFER_SIZE = 3;
 
-module window #(parameter WORD_SIZE=8, BUFFER_SIZE=3)
+module sliding_window #(parameter WORD_SIZE=8, BUFFER_SIZE=3)
                (input  logic clock, reset,
                 input logic [WORD_SIZE-1:0] inputPixel,
                 output logic [BUFFER_SIZE-1:0][WORD_SIZE-1:0]sliding[BUFFER_SIZE-1:0]);
@@ -38,7 +38,7 @@ module window #(parameter WORD_SIZE=8, BUFFER_SIZE=3)
       if(ptr < ROW_SIZE-BUFFER_SIZE) ptr <= ptr + 1;
 	  else ptr <= 0;
     end
-endmodule: window
+endmodule: sliding_window
 
 
 module sobel #(parameter WORD_SIZE=8)
@@ -49,7 +49,7 @@ module sobel #(parameter WORD_SIZE=8)
 	localparam BUFFER_SIZE=3;
 
   logic [BUFFER_SIZE-1:0] [WORD_SIZE-1:0] sliding [BUFFER_SIZE-1:0];
-  window #(WORD_SIZE,BUFFER_SIZE) my_window(.*);
+  sliding_window #(WORD_SIZE,BUFFER_SIZE) my_window(.*);
     
   logic [WORD_SIZE+1:0] gx1, gx2, gy1, gy2;
 	
