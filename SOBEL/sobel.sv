@@ -3,7 +3,7 @@ parameter WORD_SIZE = 8;
 parameter ROW_SIZE = 10;
 parameter BUFFER_SIZE = 3;
 
-module window #(parameter WORD_SIZE=8, MASC=3)
+module window #(parameter WORD_SIZE=8, BUFFER_SIZE=3)
                (input  logic clock, reset,
                 input logic [WORD_SIZE-1:0] inputPixel,
                 output logic [BUFFER_SIZE-1:0][WORD_SIZE-1:0]j[BUFFER_SIZE-1:0]);
