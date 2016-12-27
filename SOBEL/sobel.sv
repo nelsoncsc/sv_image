@@ -6,31 +6,40 @@ parameter BUFFER_SIZE = 3;
 module window #(parameter WORD_SIZE=8, BUFFER_SIZE=3)
                (input  logic clock, reset,
                 input logic [WORD_SIZE-1:0] inputPixel,
-                output logic [BUFFER_SIZE-1:0][WORD_SIZE-1:0]j[BUFFER_SIZE-1:0]);
+                output logic [BUFFER_SIZE-1:0][WORD_SIZE-1:0]sliding[BUFFER_SIZE-1:0]);
   
   logic [(BUFFER_SIZE-1)*WORD_SIZE-1:0] buffer[ROW_SIZE-1:0];
-  logic [$clog2(ROW_SIZE)-1:0] posb;
+  logic [$clog2(ROW_SIZE)-1:0] ptr;
   
   always_ff @(posedge clock)
     if(reset) begin
-      posb <=0;
-      for(int k=0; k<BUFFER_SIZE; k++)
-        for(int i=0; i<BUFFER_SIZE; i++)
-          j[i][k] <= 0;
+      ptr <=0;
+      sliding[0][0] <= 0;
+      sliding[0][1] <= 0;
+      sliding[0][2] <= 0;
+      sliding[1][0] <= 0;
+      sliding[1][1] <= 0;
+      sliding[1][2] <= 0;
+      sliding[2][0] <= 0;
+      sliding[2][1] <= 0;
+      sliding[2][2] <= 0;
     end
     else begin
-      j[0][0] <= inputPixel;
-      for(int k=0; k<BUFFER_SIZE; k++)
-        for(int i=1; i<BUFFER_SIZE; i++)
-          j[i][k] <= j[i-1][k];
+      sliding[0][0] <= inputPixel;
+      sliding[1][0] <= sliding[0][0];
+      sliding[1][1] <= sliding[0][1];
+      sliding[1][2] <= sliding[0][2];
+      sliding[2][0] <= sliding[1][0];
+      sliding[2][1] <= sliding[1][1];
+      sliding[2][2] <= sliding[1][2];
       
-      buffer[posb] <= j[BUFFER_SIZE-1][BUFFER_SIZE-2:0];
-      
-      j[0][BUFFER_SIZE-1:1] <= buffer[posb];
-      if(posb < ROW_SIZE-BUFFER_SIZE) posb <= posb + 1;
-	     else posb <= 0;
+      buffer[ptr] <= sliding[BUFFER_SIZE-1][BUFFER_SIZE-2:0];
+      sliding[0][BUFFER_SIZE-1:1] <= buffer[ptr];
+      if(ptr < ROW_SIZE-BUFFER_SIZE) ptr <= ptr + 1;
+	  else ptr <= 0;
     end
 endmodule: window
+
 
 module sobel #(parameter WORD_SIZE=8)
              (input logic clock,reset,
@@ -39,42 +48,42 @@ module sobel #(parameter WORD_SIZE=8)
 				  
 	localparam BUFFER_SIZE=3;
 
-  logic [BUFFER_SIZE-1:0] [WORD_SIZE-1:0] j [BUFFER_SIZE-1:0];
+  logic [BUFFER_SIZE-1:0] [WORD_SIZE-1:0] sliding [BUFFER_SIZE-1:0];
   window #(WORD_SIZE,BUFFER_SIZE) my_window(.*);
     
-  logic [WORD_SIZE+1:0] gradhi, gradhs, gradvl, gradvr;
+  logic [WORD_SIZE+1:0] gx1, gx2, gy1, gy2;
 	
    always_ff @(posedge clock)  
      if (reset) begin
-        gradhi <= 0;
-        gradhs <= 0;
-        gradvl <= 0;
-        gradvr <= 0;
+        gx1 <= 0;
+        gx2 <= 0;
+        gy1 <= 0;
+        gy2 <= 0;
      end
      else begin
-       gradhi <= j[0][0] + j[2][0] + (j[1][0]<<1);
-       gradhs <= j[0][2] + j[2][2] + (j[1][2]<<1);
-       gradvr <= j[2][0] + j[2][2] + (j[0][1]<<1);
-       gradvl <= j[0][0] + j[0][2] + (j[2][1]<<1);
+       gx1 <= sliding[0][0] + sliding[2][0] + (sliding[1][0]<<1);
+       gx2 <= sliding[0][2] + sliding[2][2] + (sliding[1][2]<<1);
+       gy1 <= sliding[0][0] + sliding[0][2] + (sliding[2][1]<<1);
+       gy2 <= sliding[2][0] + sliding[2][2] + (sliding[0][1]<<1);
      end
 
 	  
-   logic [WORD_SIZE+1:0] gradv, gradh;
+  logic [WORD_SIZE+1:0] gx, gy;
    always_comb begin
-      if (gradhi > gradhs) gradh <= gradhi - gradhs;
-      else                 gradh <= gradhs - gradhi;
-      if (gradvl > gradvr) gradv <= gradvl - gradvr;
-      else                 gradv <= gradvr - gradvl;
+     if (gx1 > gx2) gx <= gx1-gx2;
+      else gx <= gx2 - gx1;
+     if (gy1 > gy2) gy <= gy1-gy2;
+      else gy <= gy2-gy1;
    end
 			
-   logic [WORD_SIZE+2:0] grad;
+  logic [WORD_SIZE+2:0] g;
    
-   always_comb grad <= gradv + gradh; 
+   always_comb g <= gy+gx; 
    always_ff @(posedge clock)  
      if (reset) 
         outputPixel <= 0;
      else 
-       if (grad[WORD_SIZE+2]) outputPixel <= {WORD_SIZE{1'b1}};
-	    else outputPixel <= grad[WORD_SIZE+1:2];
+       if (g[WORD_SIZE+2]) outputPixel <= {WORD_SIZE{1'b1}};
+	    else outputPixel <= g[WORD_SIZE+1:2];
    
 endmodule
