@@ -1,5 +1,4 @@
 `include "sobel.sv"
-
 module top();
   logic clock, reset;
   logic [4:0] i, k;
