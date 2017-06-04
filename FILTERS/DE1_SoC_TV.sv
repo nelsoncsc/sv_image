@@ -759,5 +759,4 @@ I2C_AV_Config 	u1	(	//	Host Side
 						//	I2C Side
 						.I2C_SCLK(FPGA_I2C_SCLK),
 						.I2C_SDAT(FPGA_I2C_SDAT)	);	
-
 endmodule
